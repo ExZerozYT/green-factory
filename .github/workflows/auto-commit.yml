@@ -1,0 +1,27 @@
+name: Green Dot Factory
+
+on:
+  schedule:
+    # สั่งให้รันทุกๆ 2 ชั่วโมง (คุณปรับได้ตามใจชอบ)
+    - cron: "0 */2 * * *"
+  workflow_dispatch: # กดรันเองได้ด้วย
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Create Daily Commit
+        run: |
+          date >> daily_report.txt
+          echo "Feeding the snake..." >> daily_report.txt
+
+      - name: Commit and Push
+        run: |
+          git config --global user.name "GitHub Action"
+          git config --global user.email "action@github.com"
+          git add daily_report.txt
+          git commit -m "Snake food: $(date)"
+          git push
