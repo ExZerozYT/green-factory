@@ -2,7 +2,6 @@ name: Natural Green Dot Factory
 
 on:
   schedule:
-    # รันบ่อยขึ้นเล็กน้อย (ทุกๆ 1 ชั่วโมงครึ่ง) เพื่อให้มีโอกาสสุ่มได้มากขึ้น
     - cron: "0 */1 * * *"
   workflow_dispatch:
 
@@ -12,18 +11,21 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Random Commit Logic
         run: |
-          # สุ่มรอ 1 - 300 วินาที เพื่อไม่ให้เวลาซ้ำกันเป๊ะ
-          sleep $(( ( RANDOM % 300 )  + 1 ))
-          
-          # สุ่มจำนวนรอบในการ Commit (1 ถึง 4 รอบ)
-          ITERATIONS=$(( ( RANDOM % 4 )  + 1 ))
+          # สุ่มรอเพื่อความเนียน
+          sleep $(( ( RANDOM % 60 )  + 1 ))
           
           git config --global user.name "GitHub Action"
           git config --global user.email "action@github.com"
           
+          # ดึงข้อมูลล่าสุดมาก่อนป้องกันการขัดกัน
+          git pull origin main
+
+          ITERATIONS=$(( ( RANDOM % 4 )  + 1 ))
           for i in $(seq 1 $ITERATIONS)
           do
             echo "Snake food added at $(date)" >> daily_report.txt
@@ -32,4 +34,4 @@ jobs:
           done
 
       - name: Push changes
-        run: git push
+        run: git push origin main --force
