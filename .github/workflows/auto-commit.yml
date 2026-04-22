@@ -1,31 +1,30 @@
-name: Natural Green Dot Factory
-
 on:
   schedule:
-    - cron: "0 */1 * * *"
-  workflow_dispatch:
+    - cron: "0 */2 * * *"    # ทุก 2 ชั่วโมง
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - name: Check if should run today
+        id: roll
+        run: |
+          # ทุกครั้งที่ scheduler เรียก 30% ที่จะ commit จริง
+          if (( RANDOM % 30 == 0 )); then
+            echo "RUN=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "RUN=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Random Commit Logic
+        if: steps.roll.outputs.RUN == 'true'
         run: |
-          # สุ่มรอเพื่อความเนียน
-          sleep $(( ( RANDOM % 60 )  + 1 ))
-          
           git config --global user.name "GitHub Action"
           git config --global user.email "action@github.com"
           
-          # ดึงข้อมูลล่าสุดมาก่อนป้องกันการขัดกัน
           git pull origin main
 
-          ITERATIONS=$(( ( RANDOM % 4 )  + 1 ))
+          ITERATIONS=$(( ( RANDOM % 4 ) + 1 ))
           for i in $(seq 1 $ITERATIONS)
           do
             echo "Snake food added at $(date)" >> daily_report.txt
@@ -34,4 +33,5 @@ jobs:
           done
 
       - name: Push changes
+        if: steps.roll.outputs.RUN == 'true'
         run: git push origin main --force
